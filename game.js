@@ -117,7 +117,7 @@ function renderCampaign(){
  const enemyPower=Math.round(stage.enemy.reduce((sum,id)=>{const e=D.FOES[id],scale=1+(stage.id-1)*.18+(stage.boss?.16:0);return sum+(e.hp*.34+e.atk*2.7+e.def*2.4)*scale},0));
  return intro("THE TEN-STAGE CAMPAIGN","The Ashen Realms","Build your five-person crew, choose who stands in harm's way, and fight your way to the Ashen Crown.",cleared?"STAGE CLEARED":"CHAPTER "+String(stage.id).padStart(2,"0"))+
  '<div class="overline" style="margin:13px 0 3px">CHOOSE YOUR ENCOUNTER</div><div class="stage-carousel">'+stages+'</div>'+
- '<div class="campaign-columns"><div class="panel"><div class="panel-title"><h2>YOUR BATTLE FORMATION</h2><small>POWER '+integer(power(state.lineup))+'</small></div>'+
+ '<div class="campaign-columns"><div class="panel"><div class="panel-title"><h2>YOUR BATTLE FORMATION</h2><div class="formation-header-tools"><small>POWER '+integer(power(state.lineup))+'</small><button class="ghost-button" data-action="goRoster">↑ IMPROVE HERO</button></div></div>'+
  '<div class="formation-board"><div class="formation-label">BACKLINE · PROTECTED</div><div class="formation-line backline">'+slots.slice(2).join("")+'</div><div class="formation-label">FRONTLINE · TAKES FIRST HITS</div><div class="formation-line">'+slots.slice(0,2).join("")+'</div></div>'+
  '<div class="panel-title" style="margin-top:17px;margin-bottom:7px"><h2>SELECT A HERO</h2><small>'+state.companions.length+' COMPANIONS</small></div><div class="bench">'+bench+'</div><p class="formation-hint">Select a hero below, then click a formation slot to swap them in. Frontline units are targeted before the backline.</p>'+
  '<button class="secondary-button full" style="margin-top:12px" data-action="autoFormation">AUTO ARRANGE FORMATION</button></div>'+
@@ -465,6 +465,7 @@ document.addEventListener("click",e=>{
  else if(action==="upgradeGear"){upgradeGear()}
  else if(action==="quickUpgradeGear"){quickUpgradeGear()}
  else if(action==="equip"){equip(id)}
+ else if(action==="goRoster"){page="roster";render()}
  else if(action==="goCampaign"){page="campaign";render()}
 });
 document.addEventListener("change",e=>{
