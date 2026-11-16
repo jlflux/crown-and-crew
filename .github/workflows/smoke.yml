@@ -1,0 +1,17 @@
+name: Game smoke tests
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Verify combat and campaign rules
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Run smoke test (Node.js built into runner)
+        run: node tests/smoke.cjs
