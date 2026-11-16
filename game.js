@@ -129,27 +129,52 @@ function renderCampaign(){
  '<button data-action="fight" class="primary-button full" '+(locked?"disabled":"")+'>⚔ '+(cleared?"REPLAY ENCOUNTER":"BEGIN BATTLE")+' →</button></div></div>';
 }
 function tile(id){
- const u=id==="hero"?info(id):D.unitData(id),owned=recruited(id),level=xpLevel(id);
- const lock=owned?"IN YOUR GUILD":((state.stageUnlocked<(u.unlock||1))?"UNLOCK AFTER STAGE "+(u.unlock-1):"AVAILABLE TO RECRUIT");
- return '<button class="hero-tile'+(selectedUnit===id?" selected":"")+(owned?"":" unrecruited")+'" data-action="inspect" data-id="'+esc(id)+'">'+
- '<div class="hero-portrait" style="--hero:'+esc(u.color)+'"><span class="sprite">'+esc(u.glyph)+'</span><span class="hero-badge">'+(owned?"LV "+level:"LOCKED")+'</span></div><strong>'+esc(u.name)+'</strong><small>'+esc(u.title)+'</small><span class="tile-status">'+esc(lock)+'</span></button>';
+ const u=info(id),owned=recruited(id),level=xpLevel(id);
+ const status=owned?(state.lineup.includes(id)?"ACTIVE":"RESERVE"):(state.stageUnlocked<(u.unlock||1)?"LOCKED":"RECRUIT");
+ return '<button class="roster-chip'+(selectedUnit===id?" selected":"")+(owned?"":" unrecruited")+'" data-action="inspect" data-id="'+esc(id)+'" aria-pressed="'+(selectedUnit===id?"true":"false")+'" title="Inspect '+esc(u.name)+'">'+
+ '<span class="roster-chip-icon" style="--hero:'+esc(u.color)+'">'+esc(u.glyph)+'</span>'+
+ '<span class="roster-chip-copy"><strong>'+esc(u.name)+'</strong><small>'+esc(ROLE[u.role])+' · '+esc(u.faction)+'</small></span>'+
+ '<span class="roster-chip-status">'+(owned?"LV "+level:status)+'</span></button>';
 }
 function renderRoster(){
  const u=info(selectedUnit),owned=recruited(selectedUnit),lvl=xpLevel(selectedUnit),st=stats(selectedUnit);
- const upCost={gold:55+lvl*35,essence:8+lvl*6},skill=abilityLevel(selectedUnit),skillCost={gold:85+skill*55,essence:18+skill*14};
- const levelButton='<button class="secondary-button" data-action="levelHero" '+(!owned||lvl>=12?"disabled":"")+'>↑ LEVEL UP · ✦ '+upCost.gold+' / ✧ '+upCost.essence+'</button>';
- const skillButton='<button class="secondary-button" data-action="skillHero" '+(!owned||skill>=5?"disabled":"")+'>✧ UPGRADE SKILL · ✦ '+skillCost.gold+' / ✧ '+skillCost.essence+'</button>';
- const recruitButton=!owned?'<button class="primary-button" data-action="recruit" data-id="'+esc(selectedUnit)+'" '+(state.stageUnlocked<(u.unlock||1)?"disabled":"")+'>RECRUIT '+esc(u.name)+' · ✦ '+integer(u.cost)+'</button>':"";
- return intro("HEROES & COMPANIONS","The people behind the banner","Recruit specific heroes, develop their skills, and build a team whose abilities work together.",""+(state.companions.length+1)+" RECRUITED")+
- '<div class="panel"><div class="panel-title"><h2>GUILD ROSTER</h2><small>NO RANDOM SUMMONS · DIRECT RECRUITMENT</small></div><div class="hero-grid">'+["hero",...D.COMPANIONS.map(u=>u.id)].map(tile).join("")+'</div></div>'+
- '<div class="panel hero-detail"><div class="panel-title"><h2>HERO DETAILS</h2><small>'+esc(owned?"GUILD MEMBER":"NOT RECRUITED")+'</small></div><div class="detail-header">'+portrait(u,"detail-portrait")+'<div><div class="overline">'+esc(ROLE[u.role])+' · '+esc(u.faction)+'</div><h2>'+esc(u.name)+'</h2><p>'+esc(u.title)+'</p></div></div>'+
- '<p class="ability-info" style="margin-top:15px">'+esc(u.bio||u.description)+'</p>'+
- '<div class="stats-grid"><div class="stat-box"><strong>'+st.hp+'</strong><span>HEALTH</span></div><div class="stat-box"><strong>'+st.atk+'</strong><span>ATTACK</span></div><div class="stat-box"><strong>'+st.def+'</strong><span>DEFENSE</span></div><div class="stat-box"><strong>'+lvl+'</strong><span>LEVEL</span></div></div>'+
- '<div class="overline">ULTIMATE ABILITY · LV '+skill+'</div><p class="ability-info"><strong>'+esc(u.ult)+'</strong> — '+esc(abilityText(u.ability))+'. Improving the ability increases its potency.</p>'+
- '<div class="detail-action">'+(owned?levelButton+skillButton:recruitButton)+'</div>'+
- (!owned?'<p class="lock-text">'+(state.stageUnlocked<(u.unlock||1)?"Complete stage "+(u.unlock-1)+" to unlock this recruitment option.":"This hero can join your permanent roster once you have enough gold.")+'</p>':
- '<p class="formation-hint">EQUIPPED: '+esc(getGear(selectedUnit)?.name||"None")+' · Level and ability upgrades persist through the campaign.</p>')+
- '</div>';
+ const levelCap=12,skillCap=5,skill=abilityLevel(selectedUnit);
+ const levelCost={gold:55+lvl*35,essence:8+lvl*6},skillCost={gold:85+skill*55,essence:18+skill*14};
+ const levelReady=state.gold>=levelCost.gold&&state.essence>=levelCost.essence;
+ const skillReady=state.gold>=skillCost.gold&&state.essence>=skillCost.essence;
+ const equipped=getGear(selectedUnit);
+ const gearLevel=equipped?(state.gearLevels[equipped.id]||1):0;
+ const gearCost=equipped?{gold:95+gearLevel*65,essence:10+gearLevel*10}:null;
+ const inLineup=owned&&state.lineup.includes(selectedUnit);
+ const gearOptions=['<option value="">No equipment</option>',...state.inventory.map(id=>{
+  const item=D.gearData(id),holder=Object.keys(state.equipped).find(k=>state.equipped[k]===id),heldBy=holder&&holder!==selectedUnit?" · on "+info(holder).name:"";
+  return '<option value="'+esc(id)+'" '+(equipped?.id===id?"selected":"")+'>'+esc(item.name+heldBy)+'</option>';
+ })].join("");
+ const roster=["hero",...D.COMPANIONS.map(c=>c.id)];
+ const levelButton='<button class="primary-button roster-upgrade-btn" data-action="levelHero" '+(lvl>=levelCap||!levelReady?"disabled":"")+'>'+(lvl>=levelCap?"MAX LEVEL":"LEVEL UP →")+'</button>';
+ const skillButton='<button class="secondary-button roster-upgrade-btn" data-action="skillHero" '+(skill>=skillCap||!skillReady?"disabled":"")+'>'+(skill>=skillCap?"MAX RANK":"UPGRADE SKILL →")+'</button>';
+ const recruitButton='<button class="primary-button roster-upgrade-btn" data-action="recruit" data-id="'+esc(selectedUnit)+'" '+(state.stageUnlocked<(u.unlock||1)||state.gold<u.cost?"disabled":"")+'>RECRUIT · ✦ '+integer(u.cost)+'</button>';
+ const note=!owned?(state.stageUnlocked<(u.unlock||1)?"Unlock recruitment after completing stage "+(u.unlock-1)+".":"Recruit this hero with gold earned from battles."):
+  "In "+(inLineup?"your active five":"reserves")+". You can change formation positions from Campaign.";
+ const inspector=
+ '<div class="roster-inspector-head"><div><div class="overline">HERO DEVELOPMENT</div><h2>CHARACTER INSPECTOR</h2></div><span class="inspector-status">'+(owned?(inLineup?"● ACTIVE":"○ RESERVE"):"✧ UNRECRUITED")+'</span></div>'+
+ '<div class="inspector-identity">'+portrait(u,"inspector-portrait")+'<div class="inspector-name"><div class="overline">'+esc(ROLE[u.role])+' · '+esc(u.faction)+'</div><h3>'+esc(u.name)+'</h3><p>'+esc(u.title)+'</p><span>LEVEL '+lvl+' · '+esc(u.ult)+'</span></div></div>'+
+ '<div class="inspector-stats"><div><strong>'+integer(st.hp)+'</strong><span>HEALTH</span></div><div><strong>'+integer(st.atk)+'</strong><span>ATTACK</span></div><div><strong>'+integer(st.def)+'</strong><span>DEFENSE</span></div><div><strong>'+((st.speed||1)*100).toFixed(0)+'</strong><span>SPEED</span></div></div>'+
+ (owned?
+  '<div class="inspector-upgrades"><div class="inspector-upgrade"><div class="upgrade-copy"><strong>Character Level <b>'+lvl+' / '+levelCap+'</b></strong><p>More health, attack and defense.</p><small>'+(lvl>=levelCap?"MAXED OUT":'✦ '+levelCost.gold+' GOLD · ✧ '+levelCost.essence+' ESSENCE')+'</small></div>'+levelButton+'</div>'+
+  '<div class="inspector-upgrade"><div class="upgrade-copy"><strong>Ultimate Power <b>'+skill+' / '+skillCap+'</b></strong><p>'+esc(u.ult)+' · '+esc(abilityText(u.ability))+'</p><small>'+(skill>=skillCap?"MAXED OUT":'✦ '+skillCost.gold+' GOLD · ✧ '+skillCost.essence+' ESSENCE')+'</small></div>'+skillButton+'</div></div>'+
+  '<div class="inspector-equipment"><div class="inspector-mini-heading"><strong>EQUIPMENT</strong><small>'+(equipped?esc(equipped.rarity.toUpperCase())+" · LV "+gearLevel:"EMPTY SLOT")+'</small></div>'+
+  '<div class="inspector-gear-row"><label for="quickEquipSelect">EQUIPPED ITEM</label><select id="quickEquipSelect" data-quick-equip aria-label="Equip an item for '+esc(u.name)+'">'+gearOptions+'</select></div>'+
+  '<div class="inspector-gear-bottom"><span>'+esc(equipped?Object.entries(equipped.bonus).map(([k])=>k.toUpperCase()+' +'+gearBonus(equipped,k)).join(" · "):"Choose an item to improve this hero in battle.")+'</span>'+
+  '<button class="ghost-button" data-action="quickUpgradeGear" '+(!equipped||gearLevel>=5||state.gold<gearCost?.gold||state.essence<gearCost?.essence?"disabled":"")+'>'+(equipped&&gearLevel<5?"↑ UPGRADE · ✦ "+gearCost.gold+" / ✧ "+gearCost.essence:equipped?"MAX LEVEL":"NO ITEM")+'</button></div></div>'
+ :
+ '<div class="inspector-unrecruited"><p>'+esc(u.bio||u.description)+'</p>'+recruitButton+'<small>'+esc(note)+'</small></div>')+
+ '<div class="inspector-footer"><span>'+esc(note)+'</span><button class="ghost-button" data-action="goCampaign">EDIT FORMATION ↗</button></div>';
+ return intro("HERO MANAGEMENT","Build your crew","Select a hero and improve them instantly. Levels, ultimate skills and equipment are all in one place.",roster.filter(recruited).length+" IN GUILD")+
+ '<div class="roster-workbench"><section class="panel roster-catalog"><div class="panel-title"><h2>YOUR HERO COLLECTION</h2><small>'+roster.filter(recruited).length+' / '+roster.length+' RECRUITED</small></div>'+
+ '<div class="roster-list">'+roster.map(tile).join("")+'</div>'+
+ '<div class="roster-collection-hint">Earn gold and essence in Campaign. Recruitment is direct—no random summons.</div></section>'+
+ '<section class="panel roster-inspector" aria-label="Selected hero upgrades">'+inspector+'</section></div>';
 }
 function abilityText(type){
  return ({taunt:"Protects the crew with a shield and draws enemy attacks",heal:"Heals the entire party",volley:"Fires a volley at several injured enemies",meteor:"Deals magical damage across the enemy formation",cleave:"Strikes multiple frontline enemies",shadow:"Punishes a vulnerable backline enemy",ward:"Grants barriers to the entire party",rally:"Increases every ally's attack for several seconds"})[type]||"Attacks an enemy";
@@ -187,6 +212,7 @@ function renderForge(){
 }
 function render(){
  if(!state)return;
+ document.querySelector?.(".workspace-main")?.classList.toggle("roster-mode",page==="roster");
  renderHeader();renderRail();
  const pages={campaign:renderCampaign,roster:renderRoster,hall:renderHall,forge:renderForge};
  $("pageHost").innerHTML=(pages[page]||renderCampaign)();
@@ -252,6 +278,21 @@ function equip(id){
   toast(info(id).name+" equipped "+D.gearData(selectedGear).name+".");
  }
  save();render();
+}
+function quickEquip(itemId){
+ if(!recruited(selectedUnit))return;
+ if(!itemId){delete state.equipped[selectedUnit];save();render();toast(info(selectedUnit).name+" unequipped.");return}
+ if(!state.inventory.includes(itemId)||!D.gearData(itemId))return;
+ const previousHolder=Object.keys(state.equipped).find(id=>state.equipped[id]===itemId);
+ if(previousHolder&&previousHolder!==selectedUnit)delete state.equipped[previousHolder];
+ state.equipped[selectedUnit]=itemId;
+ save();render();toast(info(selectedUnit).name+" equipped "+D.gearData(itemId).name+".");
+}
+function quickUpgradeGear(){
+ const itemId=state.equipped[selectedUnit];
+ if(!itemId)return;
+ selectedGear=itemId;
+ upgradeGear();
 }
 function renderCreate(){
  $("creatorClasses").innerHTML=Object.entries(D.CLASSES).map(([key,c])=>'<button class="class-option'+(creatorClass===key?" selected":"")+'" data-create-class="'+esc(key)+'"><span class="class-glyph" style="color:'+esc(c.color)+'">'+esc(c.glyph)+'</span><strong>'+esc(c.name)+'</strong><small>'+esc(c.role==="tank"?"Defend your crew":c.role==="ranger"?"Precision damage":"Area magic")+'</small></button>').join("");
@@ -422,8 +463,13 @@ document.addEventListener("click",e=>{
  else if(action==="hallUpgrade"){hallUpgrade(id)}
  else if(action==="selectGear"){selectedGear=id;render()}
  else if(action==="upgradeGear"){upgradeGear()}
+ else if(action==="quickUpgradeGear"){quickUpgradeGear()}
  else if(action==="equip"){equip(id)}
  else if(action==="goCampaign"){page="campaign";render()}
+});
+document.addEventListener("change",e=>{
+ if(!state||battleSession)return;
+ if(e.target?.matches?.("[data-quick-equip]"))quickEquip(e.target.value);
 });
 $("profileButton").addEventListener("click",()=>{if(!state||battleSession)return;page="roster";selectedUnit="hero";render()});
 $("creatorOverlay").addEventListener("click",e=>{
