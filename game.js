@@ -17,9 +17,9 @@ function newState(name="Wanderer",key="guardian",color=COLORS[0]){
  return {
   version:1,created:true,hero:{name:String(name).trim().slice(0,18)||"Wanderer",classKey:key,color},
   gold:310,essence:95,renown:0,stageUnlocked:1,cleared:[],battleWins:0,battles:0,
-  companions:["brann","lyra","kael","niva"],lineup:["brann","hero","kael","lyra","niva"],
-  levels:{hero:1,brann:1,lyra:1,kael:1,niva:1},
-  skills:{hero:1,brann:1,lyra:1,kael:1,niva:1},
+  companions:["brann","orin","lyra","kael"],lineup:key==="guardian"?["hero","brann","orin","lyra","kael"]:["brann","orin","hero","lyra","kael"],
+  levels:{hero:1,brann:1,orin:1,lyra:1,kael:1},
+  skills:{hero:1,brann:1,orin:1,lyra:1,kael:1},
   inventory:["rustblade","leather","charm"],gearLevels:{rustblade:1,leather:1,charm:1},
   equipped:{hero:"rustblade",brann:"leather",lyra:"charm"},hall:{training:1,infirmary:1,treasury:1},
   journal:["Your guild has been founded. The Old Road awaits."]
