@@ -97,3 +97,11 @@
  .inspector-gear-bottom button{width:100%}
  .inspector-footer{align-items:stretch;flex-direction:column;gap:8px}
 }
+
+.formation-header-tools{display:flex;align-items:center;gap:10px}
+.formation-header-tools small{font-size:9px;color:#aec3cd;white-space:nowrap;font-weight:850}
+.formation-header-tools .ghost-button{font-size:9px;padding:6px 8px;color:#efcf91;border-color:#897851;background:#3a3930}
+@media(max-width:540px){
+ .formation-header-tools{gap:6px}
+ .formation-header-tools .ghost-button{font-size:8px;padding:6px}
+}
