@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#111b25"><meta name="description" content="Crown & Crew — build a hero, lead a guild, master tactical autobattles.">
+<title>Crown & Crew — A Guild Worth Fighting For</title>
+<link rel="stylesheet" href="./styles.css">
+<script defer src="./data.js"></script><script defer src="./engine.js"></script><script defer src="./game.js"></script>
+</head>
+<body>
+<div class="app-shell">
+ <aside class="nav-rail">
+  <a class="logo" href="./" aria-label="Crown and Crew home"><div class="logo-crest">♛</div><div><strong>CROWN <span>&</span> CREW</strong><small>A GUILD OF YOUR OWN</small></div></a>
+  <div class="nav-kicker">YOUR KINGDOM</div>
+  <nav class="main-nav" aria-label="Game navigation">
+   <button class="nav-link active" data-nav="campaign"><span>⚔</span><b>Campaign</b><i id="campaignNavMark">01</i></button>
+   <button class="nav-link" data-nav="roster"><span>♟</span><b>Heroes</b><i id="rosterNavMark">05</i></button>
+   <button class="nav-link" data-nav="hall"><span>♜</span><b>Guild Hall</b></button>
+   <button class="nav-link" data-nav="forge"><span>◆</span><b>Forge</b></button>
+  </nav>
+  <div class="rail-spacer"></div>
+  <div class="rail-panel">
+   <div class="overline">YOUR GUILD</div>
+   <div class="guild-sigil">✣</div>
+   <strong>The First Banner</strong>
+   <div class="rail-divider"></div>
+   <div class="rail-fact"><span>Guild Renown</span><b id="navRenown">0</b></div>
+   <div class="rail-fact"><span>Campaign</span><b id="navProgress">0 / 10</b></div>
+  </div>
+  <div class="rail-footer">EARLY ACCESS <span>v0.1</span><br>Saved locally in this browser</div>
+ </aside>
+ <div class="workspace">
+  <header class="topbar">
+   <div class="top-left"><div class="top-hint">THE ASHEN REALMS <span class="top-divider">/</span> <span id="topSection">CAMPAIGN</span></div><div class="top-welcome" id="welcomeLabel">Every legend begins somewhere.</div></div>
+   <div class="top-stats"><div class="resource"><div class="resource-icon gold">✦</div><div><small>GOLD</small><strong id="goldValue">0</strong></div></div><div class="resource"><div class="resource-icon violet">✧</div><div><small>ESSENCE</small><strong id="essenceValue">0</strong></div></div><button class="avatar-button" id="profileButton" title="Your hero profile"><span id="avatarGlyph">♜</span><div><strong id="topHeroName">Your Hero</strong><small id="topHeroLevel">LV. 1</small></div></button></div>
+  </header>
+  <div class="workspace-main">
+   <main class="main-content" id="pageHost" aria-live="polite">
+    <div class="loading">Forging the first banner...</div>
+   </main>
+   <aside class="info-rail" id="infoRail" aria-label="Guild information"></aside>
+  </div>
+  <footer class="site-footer"><span>✦ CROWN & CREW · COMBAT PROTOTYPE 0.1</span><span>BUILT AROUND THE HEROES YOU MAKE</span></footer>
+ </div>
+</div>
+
+<!-- The entire battle is live canvas drawing and stateful simulation. -->
+<div id="battleOverlay" class="battle-overlay hidden">
+ <div class="battle-window">
+  <div class="battle-header"><div><span class="overline">CAMPAIGN BATTLE <span id="battleStageNumber">01</span></span><h2 id="battleStageName">The Old Road</h2></div><div class="battle-controls"><div class="battle-speed" id="battleSpeed"><button data-speed="1" class="active">1×</button><button data-speed="2">2×</button><button data-speed="3">3×</button></div><button id="autoUltBtn" class="minor-button active">✧ Auto Ult: ON</button><button id="retreatBtn" class="minor-button">✕ Retreat</button></div></div>
+  <div class="arena-view"><canvas id="battleCanvas" width="1100" height="560" aria-label="Animated fantasy autobattle between two teams"></canvas>
+   <div class="battle-hud player-hud"><div class="hud-name">YOUR CREW</div><div class="hud-bar"><div id="hudPlayerBar"></div></div><div id="hudPlayerCount">5 / 5</div></div>
+   <div class="battle-hud enemy-hud"><div class="hud-name">ENEMY FORCES</div><div class="hud-bar enemy"><div id="hudEnemyBar"></div></div><div id="hudEnemyCount">5 / 5</div></div>
+   <div class="battle-time" id="battleClock">00:00</div>
+   <div class="battle-result hidden" id="battleResult"><div class="result-card"><div class="overline" id="resultEyebrow">BATTLE COMPLETE</div><h2 id="resultTitle">VICTORY</h2><p id="resultDescription"></p><div id="resultReward" class="result-rewards"></div><button id="resultBtn" class="primary-button">RETURN TO CAMPAIGN →</button></div></div>
+  </div>
+  <div class="battle-bottom"><div class="ultimate-section"><div class="battle-heading">ULTIMATE ABILITIES <span id="ultModeHint">AUTO-CAST ENABLED</span></div><div class="ultimate-row" id="ultimateButtons"></div></div><div class="combat-log"><div class="battle-heading">BATTLE EVENTS</div><div id="combatLogItems"></div></div></div>
+ </div>
+</div>
+
+<!-- First-time player creator. -->
+<div id="creatorOverlay" class="creator-overlay hidden">
+ <div class="creator-modal">
+  <div class="creator-top"><div class="overline">YOUR STORY STARTS HERE</div><div class="creator-crown">♛</div><h2>Every crown begins<br>with a name.</h2><p>Create your hero. This character stays with your guild as your companions grow around them.</p></div>
+  <label class="field-label" for="heroNameInput">HERO NAME</label><input id="heroNameInput" maxlength="18" autocomplete="off" placeholder="Enter your hero's name" value="Wanderer">
+  <div class="field-label">CHOOSE YOUR PATH <small>Each class plays differently</small></div>
+  <div class="class-choices" id="creatorClasses"></div>
+  <div class="field-label">BANNER COLOR</div><div class="color-choices" id="creatorColors"></div>
+  <button class="primary-button create-button" id="createHeroBtn">BEGIN YOUR LEGEND <span>↗</span></button>
+  <div class="creator-foot">No account required · Your game is saved in this browser</div>
+ </div>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body></html>
