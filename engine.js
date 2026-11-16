@@ -16,7 +16,7 @@ window.CC_ENGINE = (() => {
       energy:18, shield:0, cooldown:.25 + i*.075, casting:0, lunge:0, flash:0, taunt:0, buff:0, casts:0, dealt:0, healed:0
     }));
     return {
-      units, time:0, elapsed:0, accumulator:0, duration:100, autoUlt:settings.autoUlt !== false,
+      units, time:0, elapsed:0, accumulator:0, duration:65, autoUlt:settings.autoUlt !== false,
       winner:null, ended:false, events:[], rng:seeded(settings.seed || (Math.random()*2**32)>>>0),
       stage:settings.stage || 1, stats:{attacks:0, casts:0, deaths:0}
     };
@@ -35,7 +35,7 @@ window.CC_ENGINE = (() => {
       const backs=list.filter(x=>x.slot>=2);
       if(backs.length)return backs.sort((a,z)=>(a.hp/a.maxHp)-(z.hp/z.maxHp))[0];
     }
-    if(choice==="weak")return list.sort((a,z)=>(a.hp/a.maxHp)-(z.hp/z.maxHp))[0];
+    if(choice==="weak" || (b.time>25&&b.rng()>.4))return list.sort((a,z)=>(a.hp/a.maxHp)-(z.hp/z.maxHp))[0];
     const fronts=list.filter(x=>x.slot<2);
     const pool=fronts.length?fronts:list;
     if(u.role==="ranger"&&b.rng()<.25)return pickEnemy(b,{...u,role:"mage"},"weak");
@@ -45,7 +45,9 @@ window.CC_ENGINE = (() => {
   function damage(b,from,to,power=1,kind="hit") {
     if(!to || to.hp<=0)return 0;
     const crit=b.rng()<.115;
-    let amount=Math.max(2,round(mitigate(from.atk*power*(from.buff>0?1.25:1)*(crit?1.5:1)*(0.89+b.rng()*.20),to.def)));
+    // Overtime pressure prevents healer-heavy formations from stalemating indefinitely.
+    const frenzy=1+Math.max(0,b.time-22)*.085;
+    let amount=Math.max(2,round(mitigate(from.atk*power*frenzy*(from.buff>0?1.25:1)*(crit?1.5:1)*(0.89+b.rng()*.20),to.def)));
     const absorbed=Math.min(to.shield,amount);to.shield-=absorbed;amount-=absorbed;
     const actual=Math.min(to.hp,amount);to.hp-=actual;from.dealt+=actual;
     to.flash=.32;to.energy=clamp(to.energy + 6,0,100);
@@ -55,7 +57,8 @@ window.CC_ENGINE = (() => {
   }
   function heal(b,from,to,amount) {
     if(!to || to.hp<=0)return 0;
-    const actual=Math.min(to.maxHp-to.hp,Math.max(0,round(amount)));
+    const fatigue=Math.max(.25,1-Math.max(0,b.time-18)*.030);
+    const actual=Math.min(to.maxHp-to.hp,Math.max(0,round(amount*fatigue)));
     to.hp+=actual;from.healed+=actual;
     if(actual>0)emit(b,"heal",{from:from.id,to:to.id,amount:actual});
     return actual;
