@@ -14,6 +14,19 @@ This is a standalone game, distinct from the Ricochet Rivals physics prototype.
 
 The entire project is static HTML, CSS, and JavaScript. It **does not require npm, environment variables, a database, API keys, or backend services**. Vercel serves \`index.html\` directly. You can also open \`index.html\` in a browser or run \`python3 -m http.server 8080\` locally.
 
+## Latest UI improvement — Hero Workbench v0.2
+
+The Heroes screen is designed to make development **one-screen on desktop**:
+
+- Select a hero from a compact roster on the left; their inspector appears immediately on the right, rather than below the full collection.
+- Level up, improve ultimate abilities, and equip or upgrade items **without leaving the inspector**.
+- The right-hand informational sidebar is hidden on Heroes to reclaim room for upgrades.
+- On narrower screens, the roster becomes a horizontal strip above the inspector.
+- Use **Improve Hero** in the Campaign formation header to jump straight to the selected character's upgrades.
+- All upgrades still save to `localStorage` and affect combat stats.
+
+This is a workflow improvement, not a new graphics pass. The game's character art is still early prototype artwork.
+
 ## What is playable in version 0.1
 
 - **Hero creator:** Name your hero, choose Guardian / Ranger / Arcanist, and choose your banner color.
