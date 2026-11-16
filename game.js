@@ -305,11 +305,24 @@ function renderBattleHUD(){
 }
 function renderUltButtons(){
  const session=battleSession;if(!session)return;
- const units=session.combat.units.filter(u=>u.side===0);
- $("ultimateButtons").innerHTML=units.map(u=>
-  '<button class="ultimate'+(u.energy>=100&&u.hp>0?" ready":"")+'" data-cast="'+esc(u.id)+'" '+(u.energy<100||u.hp<=0||session.combat.autoUlt||session.finished?"disabled":"")+' title="'+esc(u.ult)+'">'+
-  '<span class="ability-glyph" style="color:'+esc(u.color)+'">'+esc(ICONS[u.role]||"✦")+'</span><small>'+esc(u.name)+'</small><div class="energy-track"><div style="width:'+Math.round(u.energy)+'%"></div></div></button>'
- ).join("");
+ const units=session.combat.units.filter(u=>u.side===0),root=$("ultimateButtons");
+ // Keep button elements stable while energy changes, so clicking an ultimate never loses
+ // its target to an automatic DOM replacement during the mouse-down / mouse-up sequence.
+ const existing=root.querySelectorAll?.("[data-cast]")||[];
+ if(existing.length!==units.length){
+  root.innerHTML=units.map(u=>
+   '<button class="ultimate" data-cast="'+esc(u.id)+'" title="'+esc(u.ult)+'">'+
+   '<span class="ability-glyph" style="color:'+esc(u.color)+'">'+esc(ICONS[u.role]||"✦")+'</span><small>'+esc(u.name)+'</small><div class="energy-track"><div></div></div></button>'
+  ).join("");
+  return renderUltButtons();
+ }
+ units.forEach((u,i)=>{
+  const b=existing[i],ready=u.energy>=100&&u.hp>0;
+  b.disabled=!ready||session.combat.autoUlt||session.finished;
+  b.classList.toggle("ready",ready);
+  const meter=b.querySelector(".energy-track > div");
+  if(meter)meter.style.width=Math.round(u.energy)+"%";
+ });
 }
 function processEvents(events){
  const s=battleSession;if(!s)return;
