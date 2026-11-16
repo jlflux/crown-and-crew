@@ -41,14 +41,14 @@ window.CC_ENGINE = (() => {
     if(u.role==="ranger"&&b.rng()<.25)return pickEnemy(b,{...u,role:"mage"},"weak");
     return pool[Math.floor(b.rng()*pool.length)];
   }
-  function mitigate(atk,def) {return atk * (100/(100+def*3.1));}
+  function mitigate(atk,def) {return atk * .76 * (100/(100+def*3.1));}
   function damage(b,from,to,power=1,kind="hit") {
     if(!to || to.hp<=0)return 0;
     const crit=b.rng()<.115;
     let amount=Math.max(2,round(mitigate(from.atk*power*(from.buff>0?1.25:1)*(crit?1.5:1)*(0.89+b.rng()*.20),to.def)));
     const absorbed=Math.min(to.shield,amount);to.shield-=absorbed;amount-=absorbed;
     const actual=Math.min(to.hp,amount);to.hp-=actual;from.dealt+=actual;
-    to.flash=.32;to.energy=clamp(to.energy + 9,0,100);
+    to.flash=.32;to.energy=clamp(to.energy + 6,0,100);
     emit(b,"damage",{from:from.id,to:to.id,amount:actual,absorbed,crit,kind});
     if(to.hp===0) {b.stats.deaths++;emit(b,"death",{target:to.id,name:to.name,side:to.side});}
     return actual;
@@ -71,7 +71,7 @@ window.CC_ENGINE = (() => {
     }
     const target=pickEnemy(b,u);if(!target)return;
     damage(b,u,target,1,"basic");
-    u.energy=clamp(u.energy+22,0,100);
+    u.energy=clamp(u.energy+20,0,100);
     u.cooldown=(u.range==="melee"?1.15:1.3)/u.speed;
     u.lunge=.25;b.stats.attacks++;
     emit(b,"attack",{from:u.id,to:target.id,kind:u.range==="ranged"?"projectile":"slash",color:u.color});
@@ -81,34 +81,35 @@ window.CC_ENGINE = (() => {
     const u=b.units.find(x=>x.id===unitId);
     if(!u||u.hp<=0||u.energy<100)return false;
     u.energy=0;u.casts++;b.stats.casts++;u.casting=.55;u.cooldown=Math.max(u.cooldown,.48);
+    const boost=1+(Math.max(1,u.skillLevel||1)-1)*.22;
     emit(b,"cast",{from:u.id,ability:u.ability,name:u.ult,side:u.side});
     const foe=other(b,u),friends=allies(b,u);
     switch(u.ability){
       case "taunt":
-        u.taunt=5.4;u.shield+=round(u.maxHp*.28+u.atk*.5);
-        emit(b,"shield",{from:u.id,to:u.id,amount:round(u.maxHp*.28+u.atk*.5)});break;
+        u.taunt=5.4;u.shield+=round((u.maxHp*.28+u.atk*.5)*boost);
+        emit(b,"shield",{from:u.id,to:u.id,amount:round((u.maxHp*.28+u.atk*.5)*boost)});break;
       case "cleave":{
         const targets=foe.filter(x=>x.slot<2).slice(0,2);
         if(!targets.length&&foe.length)targets.push(foe[0]);
-        for(const t of targets)damage(b,u,t,1.85,"ultimate");break;
+        for(const t of targets)damage(b,u,t,1.85*boost,"ultimate");break;
       }
       case "volley":{
         const targets=[...foe].sort((a,z)=>a.hp/a.maxHp-z.hp/z.maxHp).slice(0,3);
-        for(const t of targets)damage(b,u,t,1.38,"ultimate");break;
+        for(const t of targets)damage(b,u,t,1.38*boost,"ultimate");break;
       }
       case "meteor":
-        for(const t of [...foe])damage(b,u,t,.96,"ultimate");break;
+        for(const t of [...foe])damage(b,u,t,.96*boost,"ultimate");break;
       case "shadow":{
-        const t=pickEnemy(b,u,"backline");if(t)damage(b,u,t,2.7,"ultimate");break;
+        const t=pickEnemy(b,u,"backline");if(t)damage(b,u,t,2.7*boost,"ultimate");break;
       }
       case "heal":
-        for(const f of friends)heal(b,u,f,u.atk*1.65+19);break;
+        for(const f of friends)heal(b,u,f,(u.atk*1.65+19)*boost);break;
       case "ward":
-        for(const f of friends){const amount=round(u.atk*.72+15);f.shield+=amount;emit(b,"shield",{from:u.id,to:f.id,amount});}break;
+        for(const f of friends){const amount=round((u.atk*.72+15)*boost);f.shield+=amount;emit(b,"shield",{from:u.id,to:f.id,amount});}break;
       case "rally":
-        for(const f of friends)f.buff=Math.max(f.buff,7.5);break;
+        for(const f of friends)f.buff=Math.max(f.buff,7.5*boost);break;
       default:
-        if(foe[0])damage(b,u,foe[0],2,"ultimate");
+        if(foe[0])damage(b,u,foe[0],2*boost,"ultimate");
     }
     return true;
   }
