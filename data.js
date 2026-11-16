@@ -28,7 +28,7 @@ window.CC_DATA = (() => {
     reaper:  {name:"Ash Reaper",role:"assassin",hp:162,atk:44,def:10,speed:1.08,ability:"shadow",ult:"Last Breath",range:"melee",color:"#af5f7c",glyph:"✥"}
   };
   const STAGES = [
-    {id:1,name:"The Old Road",region:"Hollowwood",subtitle:"A warning at the crossroads",story:"Local raiders are blocking the passage into Hollowwood. Put your guild to the test.",enemy:["raider","raider","archer","cultist"],gold:130,essence:24,theme:"wood"},
+    {id:1,name:"The Old Road",region:"Hollowwood",subtitle:"A warning at the crossroads",story:"Local raiders are blocking the passage into Hollowwood. Put your guild to the test.",enemy:["raider","raider","raider","archer","cultist"],gold:130,essence:24,theme:"wood"},
     {id:2,name:"Whispering Pines",region:"Hollowwood",subtitle:"A scout never came home",story:"Poachers have made their camp beneath the silver trees. Break their line.",enemy:["brute","raider","archer","archer","healer"],gold:150,essence:30,theme:"wood"},
     {id:3,name:"Broken Watch",region:"Hollowwood",subtitle:"The watchtower has fallen",story:"A cult has seized the old watchtower. Their spellcasters need protection to be stopped.",enemy:["brute","raider","cultist","healer","archer"],gold:175,essence:34,theme:"wood",drop:"oakbow"},
     {id:4,name:"The Ember Pass",region:"Redstone",subtitle:"The mountain road burns",story:"Ambushers guard the pass. They favor your unprotected backline.",enemy:["knight","brute","assassin","cultist","archer"],gold:190,essence:38,theme:"mountain"},
